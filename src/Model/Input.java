@@ -10,5 +10,6 @@ public abstract class Input {
     public abstract int getOurNum(int playerNum);
     public abstract int getPlayerNum();
     public abstract boolean getResponse(int playerNum, Guess guess);
-
+    public abstract Card seeCard(Guess guess, int playerNum) throws ClueException;
+    public void consistencyCheck(int playerID, int[] list) throws InconsistentDataException {}
 }

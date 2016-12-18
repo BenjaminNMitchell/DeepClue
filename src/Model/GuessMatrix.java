@@ -17,6 +17,8 @@ public class GuessMatrix {
     private ArrayList<Card> cardsToStrike;
     private Guess guess;
     private int playerNum;
+    // Temporary for testing purposes
+    public boolean touched = false;
 
     // Default Constructor for the GuessMatrix object
     public GuessMatrix(Guess guess, int playerNum) throws ClueException {
@@ -29,11 +31,11 @@ public class GuessMatrix {
         cardsToStrike = new ArrayList<>();
         solvedNum = 0;
         strikeNum = 0;
-
     }
 
     // only adds a person to the idNums if they are not already in it. ie only a new person with that information
     public boolean[] addID(int idNum, int[] values) throws ClueException {
+        touched = true;
         for (int num : values)
             if (! (num == -1 || num == 0 || num == 1))
                 throw new ClueException(String.format("Fatal Error: Attempting to add value %d to gm: %s other then -1, 0, or 1 ", num, toString()));
@@ -66,6 +68,7 @@ public class GuessMatrix {
 
     // Adds the supplied idNum to the list of players that do not have any of the cards in this guess
     public void rejectID(int idNum) {
+        touched = true;
         if (! isMember(idNum, rejectedIDs))
             rejectedIDs.add(idNum);
     }
@@ -77,7 +80,7 @@ public class GuessMatrix {
 
 
 
-//  ---------------- This is duplicated in updateCardHas I think check later --------------------
+//  ---------------- This is duplicated in updateCardHas I think. Check later --------------------
 //    /* Strikes the Card card from the player idNum should only be called by methods that know that the card is in this guess
 //     * Does not add the card to the strike list because it's used to get rid of a card we already know to strike.
 //     * calls updateMatrix() which may add cards to newFoundCards or strikeList.
@@ -102,7 +105,7 @@ public class GuessMatrix {
 
     /*
      * Only use this method when you know that the parameter card is a card in guess
-     * Used when a card is found searches through and updates a column, when that card location is determined.
+     * Used when a card is found searches through and updates a column, when that card locaFrtion is determined.
      * Does not add the parameter card to the foundList because this function is only used when we know what a cards location is in the game object.
      * Invokes updateMatrix() which could add Cards to newFoundCards or strikeList.
      */
@@ -135,14 +138,14 @@ public class GuessMatrix {
                 int columnIndex = getIndex(card.getType());
                 if (matrix[i][columnIndex] == 1)
                     throw new ClueException(String.format("Fatal Error UCS is setting 1 to -1 in \n%s", toString()));
-                matrix[i][getIndex(card.getType())] = -1;
+                matrix[i][columnIndex] = -1;
 
             }
         return updateMatrix();
     }
 
     // updates the matrix returns true if there are new inferred cards and false if not
-    public boolean[] updateMatrix() throws ClueException {
+    private boolean[] updateMatrix() throws ClueException {
         boolean[] flags = new boolean[3];
         int strikeTemp = strikeNum;
         int solvedTemp = solvedNum;
@@ -334,6 +337,14 @@ public class GuessMatrix {
         return isMember(idNum, rejectedIDs);
     }
 
+    public boolean cardIsIn(Card target) {
+        Card[] cards = guess.getCards();
+        for (Card card : cards)
+            if (card.equals(target))
+                return true;
+        return false;
+    }
+
     // returns true if the player with ID: idNum has been entered in this guess matrix
     private boolean isMember(int idNum, ArrayList<Integer> list) {
         boolean isMember = false;
@@ -376,7 +387,11 @@ public class GuessMatrix {
 
     // Returns the guess in this GM
     public Guess getGuess() {
-        return guess;
+        return guess.clone();
+    }
+
+    public int getAcceptedNum() {
+        return acceptedIDs.size();
     }
 
     // converts this GuessMatrix to a string

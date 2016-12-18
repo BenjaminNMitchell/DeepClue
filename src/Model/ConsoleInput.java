@@ -87,6 +87,13 @@ public class ConsoleInput extends Input {
         return ourNum;
     }
 
+    public Card seeCard(Guess guess, int playerNum) {
+        System.out.println("What card did you see?");
+        Card card = inputCard();
+        card.setPlayerID(playerNum);
+        return card;
+    }
+
     private Card inputSuspect() {
         boolean flag = true;
         String name = "";
@@ -160,7 +167,7 @@ public class ConsoleInput extends Input {
                     response = false;
                 }
                 else {
-                    System.out.println("Sorry response does not corespond to true or false. Please try again");
+                    System.out.println("Response does not correspond to true or false. Please try again");
                 }
             }
         }

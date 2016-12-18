@@ -76,6 +76,24 @@ public class CompGenInput extends Input {
             return null;
     }
 
+    // When the player is the one asking the question they get to see the actual card
+    public Card seeCard(Guess guess, int playerNum) throws ClueException {
+        Card returnCard;
+        Card[] playersHand = hands[playerNum - 1];
+        Card[] targetCards = guess.getCards();
+        for (Card handCard : playersHand) {
+            for (Card targetCard : targetCards) {
+                if (handCard.equals(targetCard)) {
+                    returnCard = targetCard.clone();
+                    returnCard.setPlayerID(playerNum);
+                    return returnCard;
+                }
+            }
+        }
+        throw new ClueException(String.format("No card in %s is in player %d's hand", guess.toString(), playerNum));
+    }
+
+    // Displays the state of this hand object
     public void display() {
         System.out.println("Displaying Card Locations");
         System.out.print("Envelope:");
@@ -84,8 +102,8 @@ public class CompGenInput extends Input {
         }
         System.out.println("\n");
         System.out.print("Public Cards:");
-        for (int i = 0; i < publicCards.length; i++)
-            System.out.print(publicCards[i].toString() + " ");
+        for (Card card : publicCards)
+            System.out.print(card.toString() + " ");
         System.out.println("\n");
         System.out.println("Hands:");
         for (int i = 0; i < playerNum; i++) {
@@ -95,7 +113,6 @@ public class CompGenInput extends Input {
             System.out.println("\n");
         }
     }
-
     public Guess inputGuess() {
         Random random = new Random();
         try {
@@ -109,12 +126,10 @@ public class CompGenInput extends Input {
         } catch (GuessException e) {
             System.err.println(e.getMessage());
             return null;
-
         }
-
     }
 
-    public Card[] getPublicCards(int num) {
+    public Card[] getPublicCards(int DUMMY_VAR) {
         int len = publicCards.length;
         Card c;
         Card[] pCs = new Card[len];
@@ -126,7 +141,7 @@ public class CompGenInput extends Input {
         return pCs;
     }
 
-    public Card[] getOurCards(int num, int ourNum) {
+    public Card[] getOurCards(int DUMMY, int ourNum) {
         Card[] ourCards = new Card[handSize];
         Card c;
         for (int i = 0; i < handSize; i++) {
@@ -147,12 +162,51 @@ public class CompGenInput extends Input {
         return 4;
     }
 
+    public void consistencyCheck(int playerID, int[] list) throws InconsistentDataException {
+        Card card = null;
+        int val;
+        Card[] values;
+        if (playerID == 0) {
+            values = envelope;
+        } else {
+            values = hands[playerID - 1];
+        }
+        for (int i = 0; i < 21; i++) {
+            val = list[i];
+
+            try {
+                card = new Card(CardProperties.getCardString(i));
+            } catch (ClueException e) {
+                // unreachable
+            }
+            boolean isIn = isInHand(values, card);
+            if (val == -1)
+                if (isIn)
+                    throw new InconsistentDataException(String.format("player ID %d has %s but possibleCards value is -1", playerID, card));
+            if (val == 1) {
+                if (! isIn)
+                    throw new InconsistentDataException(String.format("player ID %d does not have %s but possibleCards value is 1", playerID, card));
+            }
+        }
+
+    }
+
+    private boolean isInHand(Card[] list, Card target) {
+        for (Card card : list)
+            if (card.equals(target))
+                return true;
+        return false;
+    }
+
     public boolean getResponse(int playerNum, Guess guess) {
         Card[] cards = guess.getCards();
+        Card handCard;
         for (Card c : cards) {
-            for (int i = 0; i < handSize; i++)
-                if (hands[playerNum - 1][i].equals(c))
+            for (int i = 0; i < handSize; i++) {
+                handCard = hands[playerNum - 1][i];
+                if (handCard.equals(c))
                     return true;
+            }
         }
         return false;
     }
