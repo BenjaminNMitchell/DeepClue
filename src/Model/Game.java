@@ -33,6 +33,8 @@ public class Game {
         data.initOurCards(io.getOurCards(handSize, ourNum));
         guessLog = new ArrayList<>();
     }
+
+
     public Guess playGame(Guess[] order) throws ClueException {
         for (Guess guess : order) {
             try {

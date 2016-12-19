@@ -374,7 +374,7 @@ public class Data {
         for (Card card : foundList) {
             if (card.equals(target)) {
                 if (!card.exactlyEquals(target))
-                    throw new ClueException(String.format("Inconsistent information: player %d has %s and player %d originally had it"));
+                    throw new InconsistentDataException(String.format("Inconsistent information: player %d has %s and player %d originally had it", target.getPlayerID(), target, card.getPlayerID()));
                 return true;
             }
         }

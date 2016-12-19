@@ -10,13 +10,11 @@ public class CardProperties {
 
     public static boolean isValid(Card card) {
         String target = card.getName();
-        boolean foundFlag = isWeapon(target) || isSuspect(target) || isRoom(target);
-        return foundFlag;
+        return isWeapon(target) || isSuspect(target) || isRoom(target);
     }
 
     public static boolean isValid(String target) {
-        boolean foundFlag = isWeapon(target) || isSuspect(target) || isRoom(target);
-        return foundFlag;
+        return isWeapon(target) || isSuspect(target) || isRoom(target);
     }
 
     public static boolean isWeapon(Card card) {

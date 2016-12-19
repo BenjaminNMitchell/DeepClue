@@ -10,19 +10,25 @@ import java.util.Random;
  */
 public class CompGenInput extends Input {
     private static final int CARD_NUMBER = 21;
+    private Random random;
     private Card[][] hands;
     private Card[] publicCards;
     private Card[] envelope;
-    private int playerNum = 4;
+    private int playerNum;
     private int handSize;
+    private int ourNum;
 
 
     public CompGenInput() {
+        random = new Random();
+        playerNum = random.nextInt(5) + 2;
+        ourNum = random.nextInt(playerNum) + 1;
+        handSize = (CARD_NUMBER - 3) / playerNum;
         ArrayList<Card> suspects = new ArrayList<>();
         ArrayList<Card> rooms = new ArrayList<>();
         ArrayList<Card> weapons = new ArrayList<>();
         populateLists(suspects, rooms, weapons);
-        dealCards(suspects, rooms, weapons);
+        dealCardsRandomly(suspects, rooms, weapons);
     }
 
     // populates the ArrayLists with the proper Cards
@@ -40,28 +46,48 @@ public class CompGenInput extends Input {
         }
     }
 
+    // Deals out the cards randomly
+    private void dealCardsRandomly(ArrayList<Card> suspects, ArrayList<Card> rooms, ArrayList<Card> weapons) {
+        envelope = new Card[3];
+        envelope[0] = getRandomCard(suspects);
+        envelope[1] = getRandomCard(rooms);
+        envelope[2] = getRandomCard(weapons);
+        hands = new Card[playerNum][handSize];
+        ArrayList<Card> remainingCards = new ArrayList<>();
+        remainingCards.addAll(suspects);
+        remainingCards.addAll(rooms);
+        remainingCards.addAll(weapons);
+        for (int i = 0 ; i < playerNum; i++) {
+            for (int j = 0; j < handSize; j++) {
+                hands[i][j] = getRandomCard(remainingCards);
+            }
+        }
+        int publicNum = remainingCards.size();
+        publicCards =  new Card[publicNum];
+        for (int i = 0; i < publicNum; i++) {
+            publicCards[i] = remainingCards.get(i);
+        }
+    }
+
     // Deals out the cards in an arbitrary deterministic way to make testing easier
-    private void dealCards(ArrayList<Card> suspects, ArrayList<Card> rooms, ArrayList<Card> weapons) {
+    private void dealCardsFixed(ArrayList<Card> suspects, ArrayList<Card> rooms, ArrayList<Card> weapons) {
         envelope = new Card[3];
         envelope[0] = pop(suspects);
         envelope[1] = pop(rooms);
         envelope[2] = pop(weapons);
-        handSize = (CARD_NUMBER - 3) / playerNum;
         int publicCardNum = (CARD_NUMBER - 3) % playerNum;
         publicCards = new Card[publicCardNum];
         for (int i = 0; i < publicCardNum; i++) {
             publicCards[i] = pop(rooms);
         }
+        ArrayList<Card> remainingCards = new ArrayList<>();
+        remainingCards.addAll(suspects);
+        remainingCards.addAll(rooms);
+        remainingCards.addAll(weapons);
         hands = new Card[playerNum][handSize];
-        Card c;
         for (int i = 0 ; i < playerNum; i++) {
             for (int j = 0; j < handSize; j++) {
-                c = pop(suspects);
-                if (c == null)
-                    c = pop(weapons);
-                if (c == null)
-                    c = pop(rooms);
-                hands[i][j] = c;
+                hands[i][j] = pop(remainingCards);
             }
         }
     }
@@ -74,6 +100,14 @@ public class CompGenInput extends Input {
             return c;
         } else
             return null;
+    }
+
+    private Card getRandomCard(ArrayList<Card> cards) {
+        Random random = new Random(System.currentTimeMillis());
+        int index = random.nextInt(cards.size());
+        Card card = cards.get(index);
+        cards.remove(index);
+        return card;
     }
 
     // When the player is the one asking the question they get to see the actual card
@@ -153,13 +187,13 @@ public class CompGenInput extends Input {
     }
 
     // stub for testing
-    public int getOurNum(int playerNum) {
-        return 1;
+    public int getOurNum(int dummy) {
+        return ourNum;
     }
 
     // stub for testing
     public int getPlayerNum() {
-        return 4;
+        return playerNum;
     }
 
     public void consistencyCheck(int playerID, int[] list) throws InconsistentDataException {
@@ -209,5 +243,24 @@ public class CompGenInput extends Input {
             }
         }
         return false;
+    }
+
+    public String toString() {
+        String str = "";
+        str += String.format("PlayerNum: %d\n", playerNum);
+        str += String.format("Envelope:-%s-%s-%s\n", envelope[0], envelope[1], envelope[2]);
+        str += "Public Cards:";
+        for (Card pubCard : publicCards) {
+            str += "-" + pubCard;
+        }
+        str += "\n";
+        for (int i =0; i < playerNum; i++) {
+            str += "Player : ";
+            for (int j = 0; j < handSize; j++) {
+                str += "-" + hands[i][j];
+            }
+            str+= "\n";
+        }
+        return str;
     }
 }
