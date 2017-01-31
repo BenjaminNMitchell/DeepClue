@@ -1,6 +1,6 @@
 package Model;
 /**
- * Created by benji on 10/2/2016.
+ * An generic exception base class for the DeepClue project.
  */
 public class ClueException extends Exception {
     public ClueException(String message) {

@@ -1,7 +1,8 @@
 package Model;
 
 /**
- * Created by benji on 9/30/2016.
+ * An exception class for the Card Object.
+ *
  */
 public class CardException extends ClueException {
     public CardException(String message) {

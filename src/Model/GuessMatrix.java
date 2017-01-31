@@ -11,14 +11,12 @@ public class GuessMatrix {
     private int[][] matrix;
     private ArrayList<Integer> acceptedIDs; // The id's of everybody we know has one of the cards in this guess.
     private ArrayList<Integer> rejectedIDs; // The id's of everybody we know doesn't have one of the cards in this guess.
-    private int solvedNum;
-    private int strikeNum;
-    private ArrayList<Card> solvedCards;
-    private ArrayList<Card> cardsToStrike;
-    private Guess guess;
-    private int playerNum;
-    // Temporary for testing purposes
-    public boolean touched = false;
+    private int solvedNum;                  // The number of 1's in this matrix (Cards we know a player has).
+    private int strikeNum;                  // The number of -1's in this matrix (Cards we know a player does not have).
+    private ArrayList<Card> solvedCards;    // Stores cards that we have deduced that a player must have
+    private ArrayList<Card> cardsToStrike;  // Stores cards that we have deduced that a player cannot have
+    private Guess guess;                    // The guess that this matrix is based on.
+    private int playerNum;                  // The number of players in the game
 
     // Default Constructor for the GuessMatrix object
     public GuessMatrix(Guess guess, int playerNum) throws ClueException {
@@ -35,7 +33,6 @@ public class GuessMatrix {
 
     // only adds a person to the idNums if they are not already in it. ie only a new person with that information
     public boolean[] addID(int idNum, int[] values) throws ClueException {
-        touched = true;
         for (int num : values)
             if (! (num == -1 || num == 0 || num == 1))
                 throw new ClueException(String.format("Fatal Error: Attempting to add value %d to gm: %s other then -1, 0, or 1 ", num, toString()));
@@ -68,7 +65,6 @@ public class GuessMatrix {
 
     // Adds the supplied idNum to the list of players that do not have any of the cards in this guess
     public void rejectID(int idNum) {
-        touched = true;
         if (! isMember(idNum, rejectedIDs))
             rejectedIDs.add(idNum);
     }
@@ -77,31 +73,6 @@ public class GuessMatrix {
     public int getTotalNumber() {
         return  acceptedIDs.size() + rejectedIDs.size();
     }
-
-
-
-//  ---------------- This is duplicated in updateCardHas I think. Check later --------------------
-//    /* Strikes the Card card from the player idNum should only be called by methods that know that the card is in this guess
-//     * Does not add the card to the strike list because it's used to get rid of a card we already know to strike.
-//     * calls updateMatrix() which may add cards to newFoundCards or strikeList.
-//    */
-//    public boolean[] strikeCard(Card card) throws ClueException {
-//        int idNum = card.getPlayerID();
-//        int cardIndex = getIndex(card.getType());
-//        int value;
-//        int index = 0;
-//        for (int id : acceptedIDs) {
-//            if (id == idNum)
-//                if (card.equals(getCard(cardIndex))) {
-//                    value = matrix[index][cardIndex];
-//                    if (value == 1)
-//                        throw new ClueException("Error trying to Strike playerNum: %d, Card: %s, in guess %s, when player has that card");
-//                    matrix[index][cardIndex] = -1;
-//                }
-//            index++;
-//        }
-//        return updateMatrix();
-//    }
 
     /*
      * Only use this method when you know that the parameter card is a card in guess
@@ -144,7 +115,7 @@ public class GuessMatrix {
         return updateMatrix();
     }
 
-    // updates the matrix returns true if there are new inferred cards and false if not
+    // updates this matrix returns true if there are new inferred cards and false if not
     private boolean[] updateMatrix() throws ClueException {
         boolean[] flags = new boolean[3];
         int strikeTemp = strikeNum;
@@ -163,12 +134,14 @@ public class GuessMatrix {
 
     }
 
+    // updates this matrix when there is only one ID in this matrix
     private void updateMatrixOne() throws ClueException {
         int rowSum = sumRow(0);
         if (rowSum == -2)
             updateRowMinusTwo(0);
     }
 
+    // Updates this matrix when there are two ID's in this matrix
     private void updateMatrixTwo() throws ClueException {
         int rowSum;
         for (int i = 0; i < 2; i++) {
@@ -178,6 +151,7 @@ public class GuessMatrix {
         }
     }
 
+    // Updates this matrix when there are three ID's in this matrix
     private void updateMatrixThree() throws ClueException {
         boolean flag = true;
         int colSum, rowSum;
@@ -206,12 +180,16 @@ public class GuessMatrix {
         }
     }
 
-    private void updateRowOne(int rowIndex) {
+    // This method is called when there is a 1 and two 0's in a row. It sets the two 0's to -1
+    // This is a correct inference only when there are 3 ID's in the matrix
+    private void updateRowOne(int rowIndex) throws ClueException {
         for (int i = 0; i < 3; i++)
             if (matrix[rowIndex][i] == 0)
                 setMinus1(rowIndex, i);
     }
 
+    // This method is called when there is a 1 and two 0's in a column. It sets the two 0's to -1
+    // Note this is only valid when there are 3 ID's in this matrix.
     private void updateColumnOne(int columnIndex) throws ClueException {
         int counter = 0;
         for (int i = 0; i < acceptedIDs.size(); i++) {
@@ -224,6 +202,8 @@ public class GuessMatrix {
             throw new ClueException(String.format("Fatal Error two people have the same card\n%s", toString()));
     }
 
+    // This method is called when a row contains two -1's and a 0. We know that the 0 must be a 1.
+    // It sets that 0 to a 1
     private void updateRowMinusTwo(int rowIndex) throws ClueException {
         for (int i = 0; i < 3; i++)
             if (matrix[rowIndex][i] == 0)
@@ -231,6 +211,8 @@ public class GuessMatrix {
 
     }
 
+    // This method is called when a column contains two -1's and a 0. We know that the 0 must be a 1
+    // Note only a valid inference when there are 3 ID's in this matrix.
     private void updateColumnMinusTwo(int columnIndex) throws ClueException {
         for (int rowIndex = 0; rowIndex < 3; rowIndex++)
             if (matrix[rowIndex][columnIndex] == 0)
@@ -238,6 +220,7 @@ public class GuessMatrix {
 
     }
 
+    // Returns the sum of the row in position rowIndex.
     private int sumRow(int rowIndex) throws ClueException {
         int aSum = 0;
         for (int i = 0; i < 3; i++) {
@@ -248,6 +231,7 @@ public class GuessMatrix {
         return aSum;
     }
 
+    // Returns the sum of the column in position columnIndex.
     private int sumColumn(int columnIndex) throws ClueException {
         int aSum = 0;
         for (int i = 0; i < 3; i++)
@@ -257,25 +241,31 @@ public class GuessMatrix {
         return aSum;
     }
 
-    private Card getCard(int i) {
+    // Returns the ith card in this guess
+    private Card getCard(int i) throws ClueException {
         if (i == 0)
             return guess.getPerson();
         if (i == 1)
             return guess.getPlace();
-        else
+        if (i == 2)
             return guess.getThing();
+        else {
+            throw new ClueException(String.format("Invalid card index %d in GuessMatrix: %s", i, guess));
+        }
     }
 
-    private void setMinus1(int rowIndex, int columnIndex) {
+    // Marks the card at the supplied position -1, and adds it to the cardToStrike list.
+    private void setMinus1(int rowIndex, int columnIndex) throws ClueException {
         Card newStrike;
         matrix[rowIndex][columnIndex] = -1;
         newStrike = getCard(columnIndex);
         newStrike.setPlayerID(acceptedIDs.get(rowIndex));
-        checkAddStrike(newStrike);
+        addToStrike(newStrike);
         strikeNum++;
     }
 
-    private void checkAddStrike(Card card) {
+    // this method adds the supplied card the cardToStrike list provided it is not already in it.
+    private void addToStrike(Card card) {
         boolean flag = true;
         for (Card c : cardsToStrike) {
             if (c.equals(card)) {
@@ -287,13 +277,14 @@ public class GuessMatrix {
             cardsToStrike.add(card);
     }
 
+    // This method sets the int in matrix as the supplied position to 1 and adds it to the solvedCards list.
     private void set1(int rowIndex, int columnIndex) throws ClueException {
         int original = matrix[rowIndex][columnIndex];
         Card newFound;
         if (original == 0) {
             newFound = getCard(columnIndex);
             newFound.setPlayerID(acceptedIDs.get(rowIndex));
-            checkAddSolved(newFound);
+            addToSolved(newFound);
         }
         else {
             if (original == -1)
@@ -304,7 +295,8 @@ public class GuessMatrix {
         solvedNum++;
     }
 
-    private void checkAddSolved(Card card) throws ClueException {
+    // This method adds the supplied card to solvedCards list.
+    private void addToSolved(Card card) throws ClueException {
         boolean flag = true;
         for (Card c : solvedCards) {
             if (c.exactlyEquals(card)) {
@@ -317,6 +309,7 @@ public class GuessMatrix {
             solvedCards.add(card);
     }
 
+    // Returns the index associated with a type string.
     private int getIndex(String type) {
         if (type == "suspect")
             return 0;
@@ -337,7 +330,8 @@ public class GuessMatrix {
         return isMember(idNum, rejectedIDs);
     }
 
-    public boolean cardIsIn(Card target) {
+    // Returns true if the supplied card is in this.guess
+    boolean cardIsIn(Card target) {
         Card[] cards = guess.getCards();
         for (Card card : cards)
             if (card.equals(target))
@@ -362,14 +356,7 @@ public class GuessMatrix {
             return false;
     }
 
-    public Card[][] getNewCards() {
-        Card[][] array = new Card[2][];
-        array[0] = getSolvedArray();
-        array[1] = getStrikeArray();
-        return array;
-    }
-
-    //
+    // Returns the contents of solvedCards and clears it
     public Card[] getSolvedArray() {
         Card[] cards = new Card[solvedCards.size()];
         cards = solvedCards.toArray(cards);
@@ -390,6 +377,7 @@ public class GuessMatrix {
         return guess.clone();
     }
 
+    // Returns the number of ID's accepted by this guessMatrix.
     public int getAcceptedNum() {
         return acceptedIDs.size();
     }

@@ -1,7 +1,7 @@
 package Model;
 
 /**
- * Created by benji on 9/30/2016.
+ * The exception class for the guess object.
  */
 public class GuessException extends ClueException {
     public GuessException(String message) {

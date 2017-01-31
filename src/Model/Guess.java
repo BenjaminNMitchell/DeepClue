@@ -26,23 +26,6 @@ public class Guess {
             throw new GuessException("Error cards are not in the right format");
     }
 
-//    // Secondary constructor for Model.Guess object obtaining names from the Input.
-//    // Parameter inputMode -> 0 for console 1 for computer generated.
-//    public Model.Guess(int inputMode) throws ClueException {
-//        Input input;
-//        Model.Card[] cards;
-//        if (inputMode == 0)
-//            input = new ConsoleInput();
-//        if (inputMode == 1)
-//            input = new CompGenInput();
-//        else
-//            throw new ClueException("inputMode is invalid must be 0 for consolInput or 1 for computerGeneratd input");
-//        cards = input.inputGuess();
-//        this.person = cards[0];
-//        this.place = cards[1];
-//        this.thing = cards[2];
-//    }
-
     // Returns deep copies of person, place, thing in a Model.Card array.
     public Card[] getCards() {
         Card[] cards = new Card[3];

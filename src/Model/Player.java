@@ -3,17 +3,19 @@ package Model;
 import java.util.ArrayList;
 
 /**
- * This class contains the information about a player in the game clue
+ * This class contains the information about what cards a player can have.
  */
 public class Player {
     private int playerID;
-    private int[] possibleCards; // 0 -> no information, -1 -> cannot have, 1 -> has
+    private int handSize;
+    protected int[] possibleCards; // 0 -> no information, -1 -> cannot have, 1 -> has
     private ArrayList<Integer> guessIndices; // a record of the guesses the player has said yes to.
     private ArrayList<Integer> strikeIndices;
 
-    public Player(int playerIdNum) {
-        possibleCards = new int[21];
+    public Player(int playerIdNum, int handSize) {
         this.playerID = playerIdNum;
+        this.handSize = handSize;
+        possibleCards = new int[21];
         guessIndices = new ArrayList<>();
         strikeIndices = new ArrayList<>();
     }
@@ -84,13 +86,11 @@ public class Player {
         possibleCards[CardProperties.getCardCode(card.getName())] = -1;
     }
 
-    // Has prints in side
     public void hasCard(Card c) throws ClueException {
         int index = CardProperties.getCardCode(c.getName());
         if (possibleCards[index] == -1)
-            throw new ClueException(String.format("Inconsistant Information player %d could not of had the card %s", playerID, c.toString()));
+            throw new ClueException(String.format("Inconsistent Information player %d could not of had the card %s", playerID, c.toString()));
         possibleCards[CardProperties.getCardCode(c.getName())] = 1;
-//        System.out.printf("Card %s set to 1 in player %d's card list\n", c.getName(), playerIdNum);
     }
 
     public void strikeCards(Guess guess) {
@@ -103,16 +103,7 @@ public class Player {
         strikeCard(thing);
     }
 
-    @Override
-    public String toString() {
-        String returnString = "";
-        returnString += String.format("Card values for player %d:\n", playerID);
-        for (int i  = 0; i < possibleCards.length; i++)
-            returnString += String.format("Card: %s, Value: %d\n", CardProperties.getCardString(i), possibleCards[i]);
-        return returnString;
-    }
-
-    public String getCardValues() {
+    public String getCardValues() throws ClueException {
         String str = String.format("Player %d Card Values:", playerID);
         for (int i = 0; i < possibleCards.length; i++) {
             str += String.format("Card: %s, Status: %d", CardProperties.getCardString(i), possibleCards[i]);
@@ -122,7 +113,7 @@ public class Player {
 
     // Checks if we can deduce more cards from this player.
     // returns null if there are no deductions to be made.
-    public Card[] clean(int handSize) throws ClueException {
+    public Card[] clean() throws ClueException {
         Card[] cards = null;
         // The number of unknown cards are in their hand
         int remainingHandCards = handSize;
