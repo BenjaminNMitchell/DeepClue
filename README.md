@@ -11,5 +11,4 @@ revealing a card to another player, or passing on a guess (meaning they do not h
 The back end takes this information and stores it. It uses the data to make new inference about what cards belong to whom,
 and alerts you when the 3 mistery cards, called the envelope are known. 
 
-Basically it tells you when you know WHO DONE IT. I am currently developing the front end in Android Studio, which allows the 
-user to scroll through the information and make the best guess they can baised on that information. 
+Basically it tells you when you know WHO DONE IT.
